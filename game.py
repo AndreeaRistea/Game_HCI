@@ -2,6 +2,9 @@ import pygame
 import pickle
 from os import path
 
+from pygame import JOYBUTTONDOWN, JOYBUTTONUP, JOYAXISMOTION, JOYHATMOTION
+
+
 from button import Button
 from coin import Coin
 from world import World
@@ -84,6 +87,7 @@ def reset_level(level):
 
 
 class Player():
+    joystick = None
     def __init__(self, x, y):
         self.reset(x, y)
 
@@ -94,6 +98,35 @@ class Player():
         col_thresh = 20
 
         if game_over == 0:
+            if self.joystick:
+                axis_x = self.joystick.get_axis(0)
+                if abs(axis_x) > 0.1:
+                    dx += (5 * axis_x)
+                    self.counter += 1
+                    if axis_x > 0:
+                        self.direction = 1
+                    if axis_x < 0:
+                        self.direction = -1
+                else:
+                    self.stop()
+                    print()
+
+                for event in pygame.event.get():
+                    if event.type == JOYBUTTONDOWN and self.joystick.get_button(0) \
+                         and self.jumped == False and self.in_air == False:
+                        self.vel_y = -15
+                        self.jumped = True
+
+                    if event.type == JOYBUTTONDOWN and self.joystick.get_button(0):
+                        self.jumped = False
+
+
+            else:
+                if pygame.joystick.get_count() > 0:
+                    self.joystick = pygame.joystick.Joystick(0)
+                    self.joystick.init()
+                    print("joystick initialized")
+
             # get keypresses
             key = pygame.key.get_pressed()
             if key[pygame.K_UP] and self.jumped == False and self.in_air == False:
@@ -111,15 +144,12 @@ class Player():
                 self.counter += 1
                 self.direction = 1
             if key[pygame.K_LEFT] == False and key[pygame.K_RIGHT] == False:
-                self.counter = 0
-                self.index = 0
-                if self.direction == 1:
-                    self.image = self.images_right[self.index]
-                if self.direction == -1:
-                    self.image = self.images_left[self.index]
+                # self.stop()
+                print()
 
             # handle animation
             if self.counter > walk_cooldown:
+                print(self.counter)
                 self.counter = 0
                 self.index += 1
                 if self.index >= len(self.images_right):
@@ -203,6 +233,14 @@ class Player():
 
         return game_over
 
+    def stop(self):
+        self.counter = 0
+        self.index = 0
+        if self.direction == 1:
+            self.image = self.images_right[self.index]
+        if self.direction == -1:
+            self.image = self.images_left[self.index]
+
     def reset(self, x, y):
         self.images_right = []
         self.images_left = []
@@ -265,6 +303,15 @@ selected_button_index = 0
 run = True
 game_in_progress = True
 
+def isRight(event):
+    if event.dict['value'] == (1, 0):
+        return True
+    return False
+
+def isLeft(event):
+    if event.dict['value'] == (-1, 0):
+        return True
+    return False
 
 def restart():
     global frame_count
@@ -272,6 +319,11 @@ def restart():
     restart_button.select()  # Selectăm butonul de restart
     frame_count = 0
 
+
+pygame.joystick.init()
+joysticks = [pygame.joystick.Joystick(i) for i in range(pygame.joystick.get_count())]
+for joystick in joysticks:
+    print(joystick.get_name())
 
 while run:
     clock.tick(fps)
@@ -281,17 +333,23 @@ while run:
 
     if main_menu:
         for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
+            if event.type == JOYAXISMOTION:
+                print(event)
+            if event.type == JOYHATMOTION:
+                if isRight(event):
                     selected_button_index = (selected_button_index - 1) % len(buttons)
-                elif event.key == pygame.K_RIGHT:
+
+                if isLeft(event):
                     selected_button_index = (selected_button_index + 1) % len(buttons)
-                elif event.key == pygame.K_RETURN:
+                print(event)
+            if event.type == JOYBUTTONDOWN:
+                if event.button == 0:
+                    print(event)
                     if buttons[selected_button_index].draw():
-                        if selected_button_index == 0:  # Dacă butonul de start este selectat
-                            main_menu = False
-                        elif selected_button_index == 1:  # Dacă butonul de exit este selectat
-                            run = False
+                            if selected_button_index == 0:  # Dacă butonul de start este selectat
+                                main_menu = False
+                            elif selected_button_index == 1:  # Dacă butonul de exit este selectat
+                                run = False
 
         # Selectează butonul corespunzător
         for i, button in enumerate(buttons):
@@ -377,19 +435,22 @@ while run:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_RETURN:
+        elif event.type == JOYBUTTONDOWN:
+            if event.button == 0:
+                print(event)
                 if game_over < 0:  # Verificăm dacă jocul este terminat
                     if restart_button.selected and level == 1:  # Verificăm dacă butonul de restart este selectat
                         world.draw()
                         world = reset_level(level)
                         game_over = 0
                         score = 0
+                        game_in_progress = True
                     else:
                         world.draw()
                         world = reset_level(level)
                         game_over = 0
                         score = score_lvl
+
     if game_in_progress:
         time_remaining = max(0, 10 - (frame_count // fps))
         minutes = time_remaining // 60

@@ -1,4 +1,6 @@
 import pygame
+from pygame import JOYBUTTONUP, JOYBUTTONDOWN
+from pygame.joystick import Joystick
 
 
 class Button:
@@ -14,12 +16,6 @@ class Button:
         self.selected = False
 
     def draw(self):
-        action = False
-
-        # Verifică apăsările de taste
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_RETURN] and self.selected:
-            action = True
 
         # Desenează butonul
         if self.selected:
@@ -27,7 +23,7 @@ class Button:
         else:
             self.screen.blit(self.image_normal, self.rect)
 
-        return action
+        return self.selected
 
     def select(self):
         self.selected = True
