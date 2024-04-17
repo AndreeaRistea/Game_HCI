@@ -50,7 +50,8 @@ class World():
                     lava = Lava(col_count * tile_size, row_count * tile_size + (tile_size // 2), tile_size)
                     lava_group.add(lava)
                 if tile == 7:
-                    coin = Coin(col_count * tile_size + (tile_size // 2), row_count * tile_size + (tile_size // 2), tile_size)
+                    coin = Coin(col_count * tile_size + (tile_size // 2), row_count * tile_size + (tile_size // 2),
+                                tile_size)
                     coin_group.add(coin)
                 if tile == 8:
                     exit = Exit(col_count * tile_size, row_count * tile_size - (tile_size // 2), tile_size)
@@ -61,3 +62,7 @@ class World():
     def draw(self):
         for tile in self.tile_list:
             self.screen.blit(tile[0], tile[1])
+
+    def getTiles(self):
+        return self.tile_list
+

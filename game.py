@@ -2,7 +2,7 @@ import pygame
 import pickle
 from os import path
 
-from pygame import JOYBUTTONDOWN, JOYBUTTONUP, JOYAXISMOTION, JOYHATMOTION
+from pygame import JOYBUTTONDOWN, JOYAXISMOTION, JOYHATMOTION
 
 
 from button import Button
@@ -109,7 +109,6 @@ class Player():
                         self.direction = -1
                 else:
                     self.stop()
-                    print()
 
                 for event in pygame.event.get():
                     if event.type == JOYBUTTONDOWN and self.joystick.get_button(0) \
@@ -125,7 +124,6 @@ class Player():
                 if pygame.joystick.get_count() > 0:
                     self.joystick = pygame.joystick.Joystick(0)
                     self.joystick.init()
-                    print("joystick initialized")
 
             # get keypresses
             key = pygame.key.get_pressed()
@@ -143,13 +141,9 @@ class Player():
                 dx += 5
                 self.counter += 1
                 self.direction = 1
-            if key[pygame.K_LEFT] == False and key[pygame.K_RIGHT] == False:
-                # self.stop()
-                print()
 
             # handle animation
             if self.counter > walk_cooldown:
-                print(self.counter)
                 self.counter = 0
                 self.index += 1
                 if self.index >= len(self.images_right):
@@ -272,6 +266,9 @@ platform_group = pygame.sprite.Group()
 lava_group = pygame.sprite.Group()
 coin_group = pygame.sprite.Group()
 exit_group = pygame.sprite.Group()
+
+player = Player(100, screen_height - 130)
+
 
 # create dummy coin for showing the score
 score_coin = Coin(tile_size // 2, tile_size // 2, tile_size)
@@ -425,7 +422,7 @@ while run:
                 text_y = (screen_height + 2.5 * text_height) // 2
                 draw_text(final_score_text, font, blue, text_x, text_y)
 
-    if frame_count // fps >= 10:
+    if frame_count // fps >= 90:
         game_over = -1
         game_in_progress = False
 
@@ -452,7 +449,7 @@ while run:
                         score = score_lvl
 
     if game_in_progress:
-        time_remaining = max(0, 10 - (frame_count // fps))
+        time_remaining = max(0, 90 - (frame_count // fps))
         minutes = time_remaining // 60
         seconds = time_remaining % 60
         draw_text(f'Time: {minutes:02}:{seconds:02}', font_score, white, screen_width - 140, 10)
